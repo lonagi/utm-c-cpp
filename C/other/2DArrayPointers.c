@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 int main(void) {
-  printf("Hello World\n");
 	
 	int rows = 3, cols = 4;
 
