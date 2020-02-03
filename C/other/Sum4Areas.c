@@ -63,8 +63,6 @@ int main(int argc, const char * argv[]) {
     }
     
     printf("\t%d \n", sum2);
-    
-    // 1 and 3 are triangles
-        
+       
     return 0;
 }
