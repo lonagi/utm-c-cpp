@@ -4,13 +4,10 @@ int gcd(int x, int y);
 
 int main(void) {
 
-	// Solution #1
-	// does not work for negative numbers (fixed)
 	int a, b;
 	
 	printf("input two numbers \n"); scanf("%d %d", &a, &b);
 
-	// fix for negative numbers
 	 b = b < 0 ? -b : b;
 
 	while (a != b) {	
