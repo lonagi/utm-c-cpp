@@ -1,38 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import sys
 import random
 import math
-
-
-# In[2]:
-
-
 import wolframclient as wl
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from sympy import *
 from sympy.plotting import plot
 import networkx as nx
-
-
-# In[3]:
-
+import pydot
+from IPython.display import Image
 
 #28 var
 #F(x1) = {x2,x3}, F(x2) = {x5,x6}, F(x3) = {x2,x4,x6}, F(x4) = {x6}, F(x5) = {x8}, F(x6) = {x5,x7,x8}, F(x7) = {x8}, F(x8) = 0
 
-
-# In[4]:
-
-
 #Соединяем точки рёбрами быстро
+
 G = nx.DiGraph()
 
 nodes = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -40,19 +26,21 @@ edges = [(1,2), (1,3), (2,5), (2,6), (3,2), (3,4), (3,6), (4,6), (5,8), (6,5), (
 G.add_nodes_from(nodes)
 G.add_edges_from(edges)
 
-
-# In[5]:
-
-
 #Второе аналитическое представление
 
-edges
-
-
-# In[6]:
-
+print(edges)
 
 #Геометрическое представление
+#Pydot
+
+#Запускать в конце!
+A = nx.nx_pydot.to_pydot(G)
+A.write_png('example2_graph.png')
+G = nx.nx_pydot.from_pydot(A) # return MultiGraph
+Image("example2_graph.png")
+
+#Геометрическое представление
+#Matplotlib
 
 nx.draw_circular(G,
         node_color = "green",
@@ -63,26 +51,16 @@ nx.draw_circular(G,
         font_size = 20
         )
 
-
-# In[7]:
-
-
 #Матрица смежности
+
 matrix_smej = nx.adjacency_matrix(G)
 Matrix(matrix_smej.toarray())
 
-
-# In[8]:
-
-
 #Матрица инцидентности
+
 matrix_inc = -nx.incidence_matrix(G, oriented=True)
 mi = matrix_inc.toarray().transpose()
 Matrix(mi)
-
-
-# In[9]:
-
 
 #Список смежности
 
@@ -96,10 +74,6 @@ for i in G.nodes():
             
 df = pd.DataFrame(a.items())
 print(df.to_string(index=False, header=False))
-
-
-# In[10]:
-
 
 #Степени
 
@@ -118,27 +92,50 @@ gx.columns = ["x","g+(x)","g-(x)","g(x)"]
 
 print(gx.to_string(index=False))
 
-
-# In[ ]:
-
-
 #Классификация
 
+for i in G.nodes():
+    isolated = 1
+    drain = 1
+    source = 1
+    
+    for j in G.edges():
+        if(i in j):
+            isolated = 0
+            break
+    for j in G.edges():
+        if(isolated == 0 and i == j[0]):
+            drain = 0
+            break
+    for j in G.edges():
+        if(isolated == 0 and i != j[0] and i == j[1]):
+            source = 0
+            break
+    
+    if(isolated==1):
+        print("X"+str(i)+": Изолированный")
+    elif(drain==1):
+        print("X"+str(i)+": Приём")
+    elif(source==1):
+        print("X"+str(i)+": Источник")
+    else:
+        print("X"+str(i)+": Промежуточный")
+    
 
-# In[11]:
-
+knots = []
+for i in G.edges():
+    if( tuple([i[1],i[0]]) in G.edges() ):
+        #knots.append(i)
+        knots.append(i[0])
+print("Узлы: " + str(knots))
 
 #Петли
 
 for i in G.edges():
-    if(i[0]==i[1]):
+    if(i in nx.selfloop_edges(G)):
         print(i)
 else:
     print("Нет петлей")
-
-
-# In[31]:
-
 
 #Вершины смежности
 
@@ -156,19 +153,46 @@ for j in G.edges():
 df = pd.DataFrame(a.items())
 print(df.to_string(index=False, header=False))
 
-
-# In[23]:
-
-
 #Ребра инцидентности
-edge = 1
 
-df = pd.DataFrame(G.edges(edge))
+edge = 4
 
+b = {}
+for i in G.edges():
+    if(edge in i):
+        b["u"+str(list(G.edges()).index(i))] = i
+        
+df = pd.DataFrame(b.items())
 print(df.to_string(index=False, header=False))
 
+#Подграф
 
-# In[75]:
+sg = 1
+nodes = [sg]
+for i in G.edges():
+    if(sg==i[0]):
+        nodes.append(i[1])
+    if(sg==i[1]):
+        nodes.append(i[0])
+        
+nodes2 = set(G.nodes()).difference(nodes)
 
+subgraph1 = G.subgraph(nodes)
+subgraph2 = G.subgraph(nodes2)
 
-#Подграфы
+nx.draw_circular(subgraph1,
+        node_color = "blue",
+        node_size = 1000, 
+        with_labels = True,
+        arrowsize = 30,
+        font_color = "white",
+        font_size = 20
+        )
+nx.draw_circular(subgraph2,
+        node_color = "red",
+        node_size = 1000, 
+        with_labels = True,
+        arrowsize = 30,
+        font_color = "white",
+        font_size = 20
+        )
